@@ -49,11 +49,13 @@ An interactive system that leverages Natural Language Processing (NLP) and Machi
 2. launch the UI:
    ```bash
    flet run ui_app.py
-🧠 Model Overview
-The classification pipeline involves:
 
-Text Cleaning & Preprocessing
-Tokenization & Lemmatization
-Vectorization using TF-IDF / BERT
-Classification with ML models
-Frontend display using Flet
+## 🧠 Core Concepts
+
+- Natural Language Processing (NLP)  
+- Text Classification  
+- Tokenization & Lemmatization  
+- TF-IDF, CountVectorizer  
+- Semantic Embedding with BERT  
+- Machine Learning Model Training & Evaluation  
+- Flet-based Web Interface
