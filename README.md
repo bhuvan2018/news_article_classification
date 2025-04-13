@@ -48,13 +48,3 @@ An interactive system that uses Natural Language Processing (NLP) and Machine Le
 2. launch the UI:
    ```bash
    flet run ui_app.py
-
-## 🧠 Core Concepts
-
-- Natural Language Processing (NLP)  
-- Text Classification  
-- Tokenization & Lemmatization  
-- TF-IDF, CountVectorizer  
-- Semantic Embedding with BERT  
-- Machine Learning Model Training & Evaluation  
-- Flet-based Web Interface
