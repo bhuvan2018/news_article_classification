@@ -1,6 +1,6 @@
 # 📰 Automated News Article Classification using ML
 
-An interactive system that leverages Natural Language Processing (NLP) and Machine Learning to automatically classify news articles into predefined categories. Built with a sleek frontend using Flet, this project simplifies content management and enhances topic-based organization for media platforms.
+An interactive system that uses Natural Language Processing (NLP) and Machine Learning to automatically classify news articles into predefined categories. Built with a sleek frontend using Flet, this project simplifies content management and enhances topic-based organization for media platforms.
 
 ---
 
