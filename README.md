@@ -21,10 +21,9 @@ An interactive system that uses Natural Language Processing (NLP) and Machine Le
 - **Environment**: Jupyter Notebook  
 - **Frontend**: Flet (Flutter + Python)
 - **Libraries**:  
-  - scikit-learn  
-  - pandas, numpy  
+  - scikit-learn   
   - nltk / spaCy (for NLP)  
-  - transformers (HuggingFace - BERT)  
+  - transformers (BERT)  
 
 ---
 
