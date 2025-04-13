@@ -9,9 +9,9 @@ An interactive system that uses Natural Language Processing (NLP) and Machine Le
 - Classifies news articles into relevant categories
 - Built-in text preprocessing: tokenization, lemmatization
 - Implements BERT for deep contextual understanding
-- Vectorization techniques like TF-IDF and CountVectorizer
+- Vectorization techniques like TF-IDF
 - Interactive user interface using Flet
-- Real-time prediction and feedback
+- Real-time prediction
 
 ---
 
