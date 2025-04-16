@@ -9,7 +9,7 @@ from flet import (
 )
 import joblib
 import time
-import random  # For demo purposes
+import random
 
 # Load vectorizer and model
 vectorizer = joblib.load("tfidf_vectorizer.pkl")
