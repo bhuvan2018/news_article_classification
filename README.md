@@ -44,7 +44,7 @@ An interactive system that uses Natural Language Processing (NLP) and Machine Le
 1. Clone the repo:
    ```bash
    git clone https://github.com/bhuvan2018/news_article_classification.git
-   cd hackathon_news_article_classification-ml
+   cd hackathon_news_article_classification
 2. launch the UI:
    ```bash
    flet run ui_app.py
