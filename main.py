@@ -24,13 +24,16 @@ def main(page: Page):
     page.window_resizable = True
     page.scroll = ScrollMode.AUTO
     page.bgcolor = "#1e1b2e"  # Dark indigo background
-    page.padding = 30
+    page.padding = 20  # Reduced padding for mobile
     page.fonts = {
         "Poppins": "https://github.com/google/fonts/raw/main/ofl/poppins/Poppins-Regular.ttf",
         "Poppins-Bold": "https://github.com/google/fonts/raw/main/ofl/poppins/Poppins-Bold.ttf",
         "Poppins-Medium": "https://github.com/google/fonts/raw/main/ofl/poppins/Poppins-Medium.ttf",
         "Poppins-SemiBold": "https://github.com/google/fonts/raw/main/ofl/poppins/Poppins-SemiBold.ttf",
     }
+    
+    # Track device type
+    is_mobile = False
     
     # Category colors and icons for predictions with purple theme
     # Replaced green with bright coral (#ff7e5f) for better visibility
@@ -57,28 +60,39 @@ def main(page: Page):
         visible=False
     )
     
+    # Function to get adaptive width based on screen size
+    def get_adaptive_width():
+        available_width = page.width if page.width else 1000
+        return min(800, available_width - 40)  # Max 800px, with 20px padding on each side
+    
     # Header component with gradient background
+    header_ref = Ref[Container]()
     header = Container(
+        ref=header_ref,
         content=Column(
             [
                 Row(
                     [
-                        Icon(icons.ANALYTICS_ROUNDED, size=40, color="#e0e0f0"),
+                        Icon(icons.ANALYTICS_ROUNDED, size=30, color="#e0e0f0"),
                         Text(
                             "News Article Classifier",
-                            size=36,
+                            size=28,  # Smaller for mobile
                             weight="bold",
                             color="#e0e0f0",
                             font_family="Poppins-Bold",
+                            no_wrap=False,  # Allow text wrapping
+                            text_align="center",
+                            expand=True,
                         )
                     ],
                     alignment=MainAxisAlignment.CENTER,
-                    spacing=16
+                    spacing=10,
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
                 ),
                 Container(height=5),
                 Text(
                     "Advanced AI-powered news categorization",
-                    size=16,
+                    size=14,  # Smaller for mobile
                     color="#e0e0f0",
                     opacity=0.9,
                     text_align="center",
@@ -94,9 +108,9 @@ def main(page: Page):
             colors=["#2d274a", "#382e5c", "#443770"] # Darker variants of midnight purple
         ),
         border_radius=border_radius.all(16),
-        padding=padding.all(30),
-        width=800,
-        margin=margin.only(bottom=25, top=10),
+        padding=padding.all(20),  # Reduced padding for mobile
+        width=get_adaptive_width(),
+        margin=margin.only(bottom=20, top=10),
         shadow=ft.BoxShadow(
             spread_radius=0,
             blur_radius=15,
@@ -112,8 +126,8 @@ def main(page: Page):
     input_field = TextField(
         ref=input_field_ref,
         multiline=True,
-        min_lines=10,
-        max_lines=15,
+        min_lines=8,  # Reduced for mobile
+        max_lines=12,  # Reduced for mobile
         hint_text="Paste or type your news article here...",
         border_radius=8,
         border_color="#443770",
@@ -138,70 +152,77 @@ def main(page: Page):
     category_bar_refs = {}
     categories = ["business", "entertainment", "politics", "sport", "tech"]
     
+    category_row_refs = {}
+    
     for category in categories:
         category_percentage_refs[category] = Ref[Text]()
         category_bar_refs[category] = Ref[Container]()
+        category_row_refs[category] = Ref[Row]()
+        
+        # Core content row that will be responsive
+        category_row = Row(
+            ref=category_row_refs[category],
+            controls=[
+                Container(
+                    content=Icon(
+                        category_colors[category]["icon"], 
+                        color="#e0e0f0", 
+                        size=20
+                    ),
+                    width=35,
+                    height=35,
+                    bgcolor=category_colors[category]["color"],
+                    border_radius=border_radius.all(8),
+                    alignment=alignment.center,
+                ),
+                Text(
+                    category.capitalize(),
+                    size=14,  # Smaller for mobile
+                    color="#e0e0f0",
+                    width=100,  # Smaller for mobile
+                    font_family="Poppins-Medium"
+                ),
+                Stack(
+                    [
+                        Container(
+                            width=200,  # Default size, will be adjusted dynamically
+                            height=12,
+                            bgcolor="#352f4d",  # Darker background for bars
+                            border_radius=border_radius.all(6),
+                            padding=0,
+                        ),
+                        Container(
+                            ref=category_bar_refs[category],
+                            width=0,
+                            height=12,
+                            bgcolor=category_colors[category]["color"],
+                            border_radius=border_radius.all(6),
+                            animate=animation.Animation(300, "easeOut"),
+                        ),
+                    ],
+                    expand=True,  # Take available space
+                ),
+                Container(
+                    content=Text(
+                        "0%",
+                        ref=category_percentage_refs[category],
+                        size=14,  # Smaller for mobile
+                        color="#e0e0f0",
+                        text_align="right",
+                        width=40,  # Smaller for mobile
+                        font_family="Poppins-SemiBold",
+                    ),
+                    animate=animation.Animation(300, "easeOut"),
+                )
+            ],
+            alignment=MainAxisAlignment.CENTER,
+            spacing=10,  # Reduced spacing for mobile
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+        )
         
         category_indicators[category] = Container(
-            content=Row(
-                [
-                    Container(
-                        content=Icon(
-                            category_colors[category]["icon"], 
-                            color="#e0e0f0", 
-                            size=20
-                        ),
-                        width=35,
-                        height=35,
-                        bgcolor=category_colors[category]["color"],
-                        border_radius=border_radius.all(8),
-                        alignment=alignment.center,
-                    ),
-                    Text(
-                        category.capitalize(),
-                        size=16,
-                        color="#e0e0f0",
-                        width=120,
-                        font_family="Poppins-Medium"
-                    ),
-                    Stack(
-                        [
-                            Container(
-                                width=300,
-                                height=12,
-                                bgcolor="#352f4d",  # Darker background for bars
-                                border_radius=border_radius.all(6),
-                                padding=0,
-                            ),
-                            Container(
-                                ref=category_bar_refs[category],
-                                width=0,
-                                height=12,
-                                bgcolor=category_colors[category]["color"],
-                                border_radius=border_radius.all(6),
-                                animate=animation.Animation(300, "easeOut"),
-                            ),
-                        ],
-                        width=300,
-                    ),
-                    Container(
-                        content=Text(
-                            "0%",
-                            ref=category_percentage_refs[category],
-                            size=16,
-                            color="#e0e0f0",
-                            text_align="right",
-                            width=60,
-                            font_family="Poppins-SemiBold",
-                        ),
-                        animate=animation.Animation(300, "easeOut"),
-                    )
-                ],
-                alignment=MainAxisAlignment.CENTER,
-                spacing=15,
-                vertical_alignment=ft.CrossAxisAlignment.CENTER,
-            ),
-            padding=padding.all(15),
+            content=category_row,
+            padding=padding.all(12),  # Reduced padding for mobile
             border_radius=border_radius.all(12),
             margin=margin.only(bottom=8),
             animate=animation.Animation(300, "easeOut"),
@@ -225,10 +246,12 @@ def main(page: Page):
                 Text(
                     ref=prediction_text_ref,
                     value="Analysis will appear here",
-                    size=18,
+                    size=16,  # Smaller for mobile
                     color="#e0e0f0",
                     weight="bold",
-                    font_family="Poppins-Bold"
+                    font_family="Poppins-Bold",
+                    no_wrap=False,  # Allow text wrapping
+                    expand=True,
                 )
             ],
             spacing=12,
@@ -236,7 +259,7 @@ def main(page: Page):
         ),
         bgcolor="#9a67ea",
         border_radius=border_radius.all(12),
-        padding=padding.symmetric(horizontal=25, vertical=15),
+        padding=padding.symmetric(horizontal=20, vertical=15),  # Reduced horizontal padding
         margin=margin.only(top=15, bottom=10),
         shadow=ft.BoxShadow(
             spread_radius=0,
@@ -252,130 +275,162 @@ def main(page: Page):
     processing_time_ref = Ref[Text]()
     word_count_ref = Ref[Text]()
     
-    # Statistics display
-    stats_row = Row(
-        [
-            Container(
-                content=Column(
-                    [
-                        Row(
-                            [
-                                Icon(icons.BAR_CHART_ROUNDED, size=20, color="#9a67ea"),
-                                Text("Confidence", size=14, color="#c8c8e0", font_family="Poppins-Medium")
-                            ],
-                            spacing=5,
-                        ),
-                        Container(
-                            content=Text(
-                                "0%",
-                                ref=confidence_text_ref,
-                                size=20,
-                                color="#e0e0f0",
-                                font_family="Poppins-Bold",
-                            ),
-                            animate=animation.Animation(300, "easeOut"),
-                        )
-                    ],
-                    spacing=5,
-                    horizontal_alignment=CrossAxisAlignment.CENTER,
-                ),
-                bgcolor="#2a2640",  # Darker card color
-                border_radius=border_radius.all(12),
-                padding=padding.all(15),
-                expand=True,
-                alignment=alignment.center,
-                border=border.all(1, "#352f4d"),
-            ),
-            Container(
-                content=Column(
-                    [
-                        Row(
-                            [
-                                Icon(icons.TIMER_OUTLINED, size=20, color="#9a67ea"),
-                                Text("Processing Time", size=14, color="#c8c8e0", font_family="Poppins-Medium")
-                            ],
-                            spacing=5,
-                        ),
-                        Container(
-                            content=Text(
-                                "0.00s",
-                                ref=processing_time_ref,
-                                size=20,
-                                color="#e0e0f0",
-                                font_family="Poppins-Bold",
-                            ),
-                            animate=animation.Animation(300, "easeOut"),
-                        )
-                    ],
-                    spacing=5,
-                    horizontal_alignment=CrossAxisAlignment.CENTER,
-                ),
-                bgcolor="#2a2640",  # Darker card color
-                border_radius=border_radius.all(12),
-                padding=padding.all(15),
-                expand=True,
-                alignment=alignment.center,
-                border=border.all(1, "#352f4d"),
-            ),
-            Container(
-                content=Column(
-                    [
-                        Row(
-                            [
-                                Icon(icons.TEXT_FIELDS_ROUNDED, size=20, color="#9a67ea"),
-                                Text("Word Count", size=14, color="#c8c8e0", font_family="Poppins-Medium")
-                            ],
-                            spacing=5,
-                        ),
-                        Container(
-                            content=Text(
-                                "0",
-                                ref=word_count_ref,
-                                size=20,
-                                color="#e0e0f0",
-                                font_family="Poppins-Bold",
-                            ),
-                            animate=animation.Animation(300, "easeOut"),
-                        )
-                    ],
-                    spacing=5,
-                    horizontal_alignment=CrossAxisAlignment.CENTER,
-                ),
-                bgcolor="#2a2640",  # Darker card color
-                border_radius=border_radius.all(12),
-                padding=padding.all(15),
-                expand=True,
-                alignment=alignment.center,
-                border=border.all(1, "#352f4d"),
-            ),
-        ],
-        spacing=15,
-        alignment=MainAxisAlignment.SPACE_BETWEEN,
-    )
-
-    # Result card with animations
-    result_container = Container(
+    # Statistics display with refs for responsive layout
+    stats_row_ref = Ref[Row]()
+    stats_col_ref = Ref[Column]()
+    
+    # Stats components that can be displayed in row or column based on screen size
+    confidence_stat = Container(
         content=Column(
             [
                 Row(
                     [
-                        Row(
-                            [
-                                Icon(icons.ANALYTICS_ROUNDED, color="#9a67ea", size=24),
-                                Text(
-                                    "Classification Results",
-                                    size=20,
-                                    weight="bold",
-                                    color="#e0e0f0",
-                                    font_family="Poppins-Bold"
-                                )
-                            ],
-                            spacing=10,
-                        ),
-                        progress_ring,
+                        Icon(icons.BAR_CHART_ROUNDED, size=20, color="#9a67ea"),
+                        Text("Confidence", size=14, color="#c8c8e0", font_family="Poppins-Medium")
                     ],
-                    alignment=MainAxisAlignment.SPACE_BETWEEN,
+                    spacing=5,
                 ),
+                Container(
+                    content=Text(
+                        "0%",
+                        ref=confidence_text_ref,
+                        size=18,  # Smaller for mobile
+                        color="#e0e0f0",
+                        font_family="Poppins-Bold",
+                    ),
+                    animate=animation.Animation(300, "easeOut"),
+                )
+            ],
+            spacing=5,
+            horizontal_alignment=CrossAxisAlignment.CENTER,
+        ),
+        bgcolor="#2a2640",  # Darker card color
+        border_radius=border_radius.all(12),
+        padding=padding.all(12),  # Reduced padding for mobile
+        expand=True,
+        alignment=alignment.center,
+        border=border.all(1, "#352f4d"),
+    )
+    
+    time_stat = Container(
+        content=Column(
+            [
+                Row(
+                    [
+                        Icon(icons.TIMER_OUTLINED, size=20, color="#9a67ea"),
+                        Text("Processing Time", size=14, color="#c8c8e0", font_family="Poppins-Medium")
+                    ],
+                    spacing=5,
+                ),
+                Container(
+                    content=Text(
+                        "0.00s",
+                        ref=processing_time_ref,
+                        size=18,  # Smaller for mobile
+                        color="#e0e0f0",
+                        font_family="Poppins-Bold",
+                    ),
+                    animate=animation.Animation(300, "easeOut"),
+                )
+            ],
+            spacing=5,
+            horizontal_alignment=CrossAxisAlignment.CENTER,
+        ),
+        bgcolor="#2a2640",  # Darker card color
+        border_radius=border_radius.all(12),
+        padding=padding.all(12),  # Reduced padding for mobile
+        expand=True,
+        alignment=alignment.center,
+        border=border.all(1, "#352f4d"),
+    )
+    
+    word_stat = Container(
+        content=Column(
+            [
+                Row(
+                    [
+                        Icon(icons.TEXT_FIELDS_ROUNDED, size=20, color="#9a67ea"),
+                        Text("Word Count", size=14, color="#c8c8e0", font_family="Poppins-Medium")
+                    ],
+                    spacing=5,
+                ),
+                Container(
+                    content=Text(
+                        "0",
+                        ref=word_count_ref,
+                        size=18,  # Smaller for mobile
+                        color="#e0e0f0",
+                        font_family="Poppins-Bold",
+                    ),
+                    animate=animation.Animation(300, "easeOut"),
+                )
+            ],
+            spacing=5,
+            horizontal_alignment=CrossAxisAlignment.CENTER,
+        ),
+        bgcolor="#2a2640",  # Darker card color
+        border_radius=border_radius.all(12),
+        padding=padding.all(12),  # Reduced padding for mobile
+        expand=True,
+        alignment=alignment.center,
+        border=border.all(1, "#352f4d"),
+    )
+    
+    # Row layout for desktop
+    stats_row = Row(
+        ref=stats_row_ref,
+        controls=[
+            confidence_stat,
+            time_stat,
+            word_stat
+        ],
+        spacing=10,  # Reduced spacing for mobile
+        alignment=MainAxisAlignment.SPACE_BETWEEN,
+        visible=True,  # Start visible for desktop
+    )
+    
+    # Column layout for mobile
+    stats_col = Column(
+        ref=stats_col_ref,
+        controls=[
+            confidence_stat,
+            time_stat,
+            word_stat
+        ],
+        spacing=10,
+        visible=False,  # Start hidden, show on mobile
+    )
+
+    # Result card container ref
+    result_container_ref = Ref[Container]()
+    
+    # Title row with progress indicator
+    result_title_row = Row(
+        [
+            Row(
+                [
+                    Icon(icons.ANALYTICS_ROUNDED, color="#9a67ea", size=24),
+                    Text(
+                        "Classification Results",
+                        size=18,  # Smaller for mobile
+                        weight="bold",
+                        color="#e0e0f0",
+                        font_family="Poppins-Bold"
+                    )
+                ],
+                spacing=10,
+            ),
+            progress_ring,
+        ],
+        alignment=MainAxisAlignment.SPACE_BETWEEN,
+    )
+    
+    # Result card with animations
+    result_container = Container(
+        ref=result_container_ref,
+        content=Column(
+            [
+                result_title_row,
                 Divider(height=1, color="#352f4d", thickness=2),
                 Container(height=15),
                 Column(
@@ -384,11 +439,12 @@ def main(page: Page):
                 ),
                 prediction_display,
                 stats_row,
+                stats_col,  # Include both layouts and toggle visibility
             ],
             spacing=10,
         ),
         bgcolor="#2a2640",  # Card color
-        padding=padding.all(25),
+        padding=padding.all(20),  # Reduced padding for mobile
         border_radius=border_radius.all(16),
         border=border.all(1, "#352f4d"),
         shadow=ft.BoxShadow(
@@ -397,11 +453,11 @@ def main(page: Page):
             color="#0000001A",
             offset=ft.Offset(0, 8)
         ),
-        width=800,
-        margin=margin.only(bottom=25),
+        width=get_adaptive_width(),
+        margin=margin.only(bottom=20),
     )
     
-    # Update result card function with proper animations - FIXED VERSION
+    # Update result card function with proper animations and responsive adjustments
     def update_result_card(prediction, probabilities, processing_time):
         # Calculate word count
         word_count = len(input_field.value.split())
@@ -418,12 +474,18 @@ def main(page: Page):
         # Ensure the prediction is lowercase to match category keys
         prediction = prediction.lower()
         
+        # Calculate bar scale factor based on screen width
+        available_width = page.width if page.width else 1000
+        bar_scale = 3.0  # Default scale factor for desktop
+        if available_width < 600:
+            bar_scale = 1.5  # Smaller scale for mobile
+        
         # Update all category bars with animation
         for i, category in enumerate(categories):
             confidence = int(probabilities[i] * 100)
             
-            # Update bar width with animation
-            category_bar_refs[category].current.width = confidence * 3
+            # Update bar width with animation, scaled for screen size
+            category_bar_refs[category].current.width = confidence * bar_scale
             
             # Update percentage text
             category_percentage_refs[category].current.value = f"{confidence}%"
@@ -436,7 +498,7 @@ def main(page: Page):
                 category_indicators[category].bgcolor = "#2a2640"  # Dark background
                 category_indicators[category].border = None
         
-        # Update final prediction display - FIXED
+        # Update final prediction display
         prediction_text_ref.current.value = f"Classified as: {prediction.capitalize()}"
         
         # Use safe access to category_colors with fallback to default
@@ -537,35 +599,28 @@ def main(page: Page):
             "tech": """Apple has unveiled its highly anticipated iPhone 15 series, featuring 
             significant improvements to the camera system, a more powerful A16 bionic chip, and the 
             introduction of USB-C connectivity replacing the Lightning port. The Pro models come with a 
-            titanium frame, reducing the overall weight while increasing durability. Industry analysts 
-            project strong sales despite the premium pricing, as early pre-orders have already exceeded 
-            expectations in key markets.""",
+            titanium frame, reducing the overall weight while increasing durability.""",
             
             "business": """Goldman Sachs reported quarterly earnings that exceeded Wall Street expectations, 
             with profits rising 12% compared to the same period last year. The investment banking giant 
             saw particularly strong performance in its trading division, which benefited from market 
-            volatility. CEO David Solomon announced plans to expand the firm's wealth management business 
-            and increase its dividend by 10% starting next quarter. Shares rose 3.5% following the announcement.""",
+            volatility.""",
             
             "politics": """The Senate passed a comprehensive infrastructure bill today with bipartisan 
             support, allocating $1.2 trillion for roads, bridges, public transport, and broadband internet. 
             The legislation, which represents one of the largest infrastructure investments in decades, 
-            now moves to the House for consideration. President Johnson called it "a historic step forward" 
-            while emphasizing that the bill would create millions of jobs and strengthen America's economic 
-            competitiveness.""",
+            now moves to the House for consideration.""",
             
             "sport": """Manchester City secured a dramatic 3-2 victory against Real Madrid in the Champions 
             League semifinal last night. After trailing 2-0 at halftime, City mounted an incredible comeback 
-            with goals from De Bruyne, Foden, and a stoppage-time winner from Haaland. Manager Pep Guardiola 
-            praised his team's resilience and tactical discipline. The win puts City in position to reach their 
-            second Champions League final in three years.""",
+            with goals from De Bruyne, Foden, and a stoppage-time winner from Haaland.""",
             
             "entertainment": """The 96th Academy Awards ceremony delivered several surprises, with the 
             independent film "Moonlight Sonata" taking home Best Picture over heavily favored studio 
-            productions. Lead actress Maya Rodriguez won her first Oscar after three previous nominations, 
-            delivering an emotional acceptance speech that received a standing ovation. The ceremony's 
-            ratings increased by 15% from last year, reversing a multi-year decline in viewership."""
+            productions. Lead actress Maya Rodriguez won her first Oscar after three previous nominations."""
         }
+        
+        # Shortened samples for mobile
         
         input_field_ref.current.value = samples[sample_type]
         page.update()
@@ -652,66 +707,100 @@ def main(page: Page):
         
         page.update()
 
-    # Buttons row with hover effects and advanced styling
+    # Responsive buttons refs
+    buttons_row_ref = Ref[Row]()
+    buttons_col_ref = Ref[Column]()
+    
+    # Clear button with touch-friendly design
+    clear_button = ElevatedButton(
+        content=Row(
+            [
+                Icon(icons.CLEANING_SERVICES_ROUNDED, color="#e0e0f0", size=18),
+                Text("Clear", size=14, color="#e0e0f0", font_family="Poppins-Medium")
+            ],
+            spacing=8
+        ),
+        style=ButtonStyle(
+            shape=RoundedRectangleBorder(radius=12),
+            bgcolor="#554986",  # Muted purple for the clear button
+            elevation=0,
+            padding=15,  # Slightly reduced padding
+            animation_duration=200,
+        ),
+        on_click=clear_text,
+        tooltip="Clear article text",
+        expand=True,  # Allow button to expand in mobile view
+    )
+    
+    # Sample button container
+    sample_button = Container(
+        content=sample_dropdown,
+        bgcolor="#2a2640",  # Dark purple background
+        height=45,
+        width=45,
+        border_radius=border_radius.all(12),
+        border=border.all(1, "#443770"),
+        alignment=alignment.center,
+        tooltip="Load sample article",
+    )
+    
+    # Analyze button
+    analyze_button = ElevatedButton(
+        content=Row(
+            [
+                Icon(icons.ANALYTICS_ROUNDED, color="#e0e0f0", size=18),
+                Text("Analyze Article", size=14, color="#e0e0f0", font_family="Poppins-Medium")
+            ],
+            spacing=8
+        ),
+        style=ButtonStyle(
+            shape=RoundedRectangleBorder(radius=12),
+            bgcolor={"": "#9a67ea", "hovered": "#8252c8"},  # Lavender / darker lavender on hover
+            color={"": "#e0e0f0", "hovered": "#e0e0f0"},
+            elevation={"": 0, "hovered": 2},
+            padding=15,  # Slightly reduced padding
+            animation_duration=200,
+            shadow_color="#9a67ea80"
+        ),
+        on_click=classify_article_with_animation,
+        tooltip="Analyze and classify article",
+        expand=True,  # Allow button to expand in mobile view
+    )
+    
+    # Horizontal layout for desktop
     buttons_row = Row(
-        [
-            ElevatedButton(
-                content=Row(
-                    [
-                        Icon(icons.CLEANING_SERVICES_ROUNDED, color="#e0e0f0", size=18),
-                        Text("Clear", size=14, color="#e0e0f0", font_family="Poppins-Medium")
-                    ],
-                    spacing=8
-                ),
-                style=ButtonStyle(
-                    shape=RoundedRectangleBorder(radius=12),
-                    bgcolor="#554986",  # Muted purple for the clear button
-                    elevation=0,
-                    padding=20,
-                    animation_duration=200,
-                ),
-                on_click=clear_text,
-                tooltip="Clear article text"
-            ),
-            Container(width=5),
-            Container(
-                content=sample_dropdown,
-                bgcolor="#2a2640",  # Dark purple background
-                height=45,
-                width=45,
-                border_radius=border_radius.all(12),
-                border=border.all(1, "#443770"),
-                alignment=alignment.center,
-                tooltip="Load sample article",
-            ),
-            Container(width=5),
-            ElevatedButton(
-                content=Row(
-                    [
-                        Icon(icons.ANALYTICS_ROUNDED, color="#e0e0f0", size=18),
-                        Text("Analyze Article", size=14, color="#e0e0f0", font_family="Poppins-Medium")
-                    ],
-                    spacing=8
-                ),
-                style=ButtonStyle(
-                    shape=RoundedRectangleBorder(radius=12),
-                    bgcolor={"": "#9a67ea", "hovered": "#8252c8"},  # Lavender / darker lavender on hover
-                    color={"": "#e0e0f0", "hovered": "#e0e0f0"},
-                    elevation={"": 0, "hovered": 2},
-                    padding=20,
-                    animation_duration=200,
-                    shadow_color="#9a67ea80"
-                ),
-                on_click=classify_article_with_animation,
-                tooltip="Analyze and classify article"
+        ref=buttons_row_ref,
+        controls=[
+            clear_button,
+            sample_button,
+            analyze_button
+        ],
+        spacing=10,
+        alignment=MainAxisAlignment.CENTER,
+        visible=True,  # Default visible for desktop
+    )
+    
+    # Vertical layout for mobile
+    buttons_col = Column(
+        ref=buttons_col_ref,
+        controls=[
+            analyze_button,  # Most important button first
+            Row(
+                [clear_button, sample_button],
+                spacing=10,
+                alignment=MainAxisAlignment.SPACE_BETWEEN,
             )
         ],
-        spacing=0,
-        alignment=MainAxisAlignment.CENTER
+        spacing=10,
+        visible=False,  # Hidden by default, show on mobile
     )
+    
+    # Input card refs for responsive sizing
+    input_card_ref = Ref[Container]()
     
     # Input card with advanced styling
     input_card = Container(
+        ref=input_card_ref,
         content=Column(
             [
                 Row(
@@ -721,7 +810,7 @@ def main(page: Page):
                                 Icon(icons.ARTICLE_ROUNDED, color="#9a67ea", size=24),
                                 Text(
                                     "News Article Input",
-                                    size=20,
+                                    size=18,  # Smaller for mobile
                                     weight="bold",
                                     color="#e0e0f0",
                                     font_family="Poppins-Bold"
@@ -735,13 +824,14 @@ def main(page: Page):
                 Divider(height=1, color="#352f4d", thickness=2),
                 Container(height=10),
                 input_field,
-                Container(height=20),
+                Container(height=15),  # Reduced spacing for mobile
                 buttons_row,
+                buttons_col,  # Include both layouts and toggle visibility
             ],
             spacing=5,
         ),
         bgcolor="#2a2640",  # Dark purple background
-        padding=padding.all(25),
+        padding=padding.all(20),  # Reduced padding for mobile
         border_radius=border_radius.all(16),
         border=border.all(1, "#352f4d"),
         shadow=ft.BoxShadow(
@@ -750,68 +840,109 @@ def main(page: Page):
             color="#00000040",
             offset=ft.Offset(0, 8)
         ),
-        width=800,
-        margin=margin.only(bottom=25),
-    )
-    
-    # Footer with links
-    footer = Container(
-        content=Row(
-            [
-                Text(
-                    "© 2025 Advanced News Classifier",
-                    size=13,
-                    color="#a8a8c0",  # Lighter text for footer
-                    font_family="Poppins"
-                ),
-                Row(
-                    [
-                        TextButton(
-                            content=Text(
-                                "About",
-                                size=13,
-                                color="#9a67ea",
-                                font_family="Poppins"
-                            ),
-                            style=ButtonStyle(
-                                padding=10,
-                            ),
-                        ),
-                        TextButton(
-                            content=Text(
-                                "Documentation",
-                                size=13,
-                                color="#9a67ea",
-                                font_family="Poppins"
-                            ),
-                            style=ButtonStyle(
-                                padding=10,
-                            ),
-                        ),
-                        TextButton(
-                            content=Text(
-                                "Privacy",
-                                size=13,
-                                color="#9a67ea",
-                                font_family="Poppins"
-                            ),
-                            style=ButtonStyle(
-                                padding=10,
-                            ),
-                        ),
-                    ],
-                    spacing=0,
-                )
-            ],
-            alignment=MainAxisAlignment.SPACE_BETWEEN,
-            width=800,
-        ),
+        width=get_adaptive_width(),
         margin=margin.only(bottom=20),
     )
     
+    # Footer refs for responsive layout
+    footer_ref = Ref[Container]()
+    footer_row_ref = Ref[Row]()
+    footer_col_ref = Ref[Column]()
+    
+    # Footer copyright text
+    copyright_text = Text(
+        "© 2025 Advanced News Classifier",
+        size=12,  # Smaller for mobile
+        color="#a8a8c0",  # Lighter text for footer
+        font_family="Poppins",
+        text_align="center",
+    )
+    
+    # Footer links row
+    footer_links = Row(
+        [
+            TextButton(
+                content=Text(
+                    "About",
+                    size=12,  # Smaller for mobile
+                    color="#9a67ea",
+                    font_family="Poppins"
+                ),
+                style=ButtonStyle(
+                    padding=8,  # Smaller padding for touch targets
+                ),
+            ),
+            TextButton(
+                content=Text(
+                    "Docs",  # Shortened text for mobile
+                    size=12,  # Smaller for mobile
+                    color="#9a67ea",
+                    font_family="Poppins"
+                ),
+                style=ButtonStyle(
+                    padding=8,  # Smaller padding for touch targets
+                ),
+            ),
+            TextButton(
+                content=Text(
+                    "Privacy",
+                    size=12,  # Smaller for mobile
+                    color="#9a67ea",
+                    font_family="Poppins"
+                ),
+                style=ButtonStyle(
+                    padding=8,  # Smaller padding for touch targets
+                ),
+            ),
+        ],
+        spacing=0,
+        alignment=MainAxisAlignment.CENTER,  # Center for mobile
+    )
+    
+    # Horizontal footer for desktop
+    footer_row = Row(
+        ref=footer_row_ref,
+        controls=[
+            copyright_text,
+            footer_links
+        ],
+        alignment=MainAxisAlignment.SPACE_BETWEEN,
+        width=get_adaptive_width(),
+        visible=True,  # Default visible for desktop
+    )
+    
+    # Vertical footer for mobile
+    footer_col = Column(
+        ref=footer_col_ref,
+        controls=[
+            copyright_text,
+            footer_links
+        ],
+        spacing=10,
+        horizontal_alignment=CrossAxisAlignment.CENTER,
+        visible=False,  # Hidden by default, show on mobile
+    )
+    
+    # Footer container
+    footer = Container(
+        ref=footer_ref,
+        content=Column(
+            [
+                footer_row,
+                footer_col,
+            ]
+        ),
+        margin=margin.only(bottom=15),
+        width=get_adaptive_width(),
+    )
+    
+    # Main column ref for updating
+    main_column_ref = Ref[Column]()
+    
     # Layout
     main_column = Column(
-        [
+        ref=main_column_ref,
+        controls=[
             header,
             input_card,
             result_container,
@@ -821,7 +952,68 @@ def main(page: Page):
         spacing=0,
     )
     
-    page.add(main_column)
+    # Helper function to update responsive layout
+    def update_layout():
+        nonlocal is_mobile
+        width = page.width if page.width else 1000
+        
+        # Determine if we're in mobile mode (width < 600px)
+        new_is_mobile = width < 600
+        
+        # Only update if the device type has changed
+        if new_is_mobile != is_mobile:
+            is_mobile = new_is_mobile
+            
+            # Update component widths
+            adaptive_width = get_adaptive_width()
+            header_ref.current.width = adaptive_width
+            input_card_ref.current.width = adaptive_width
+            result_container_ref.current.width = adaptive_width
+            footer_ref.current.width = adaptive_width
+            
+            # Toggle button layouts
+            buttons_row_ref.current.visible = not is_mobile
+            buttons_col_ref.current.visible = is_mobile
+            
+            # Toggle stats layouts
+            stats_row_ref.current.visible = not is_mobile
+            stats_col_ref.current.visible = is_mobile
+            
+            # Toggle footer layouts
+            footer_row_ref.current.visible = not is_mobile
+            footer_col_ref.current.visible = is_mobile
+            
+            # Update category bar sizes
+            for category in categories:
+                # Get current percentage value
+                current_text = category_percentage_refs[category].current.value
+                percentage = int(current_text.strip('%')) if current_text and current_text.strip('%').isdigit() else 0
+                
+                # Recalculate bar width
+                bar_scale = 1.5 if is_mobile else 3.0
+                category_bar_refs[category].current.width = percentage * bar_scale
+            
+            page.update()
+    
+    # Handle page resize event
+    def page_resize(e):
+        update_layout()
+    
+    # Register resize handler
+    page.on_resize = page_resize
+    
+    # Initial layout update
+    def initialize_layout():
+        # Add components to page first
+        page.add(main_column)
+        
+        # Then update layout after a short delay to ensure page dimensions are available
+        page.update()
+        time.sleep(0.1)
+        update_layout()
+    
+    # Initialize layout
+    initialize_layout()
 
 # Run the app
 ft.app(target=main)
